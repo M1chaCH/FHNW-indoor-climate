@@ -1,16 +1,14 @@
 # FHNW (ipro) Indoor Climate
 FHNW (ipro) is a mandatory individual software project, worth 6 ETCS.
 
-> Note: Work in progress. Interested? Contact thomas.amberg@fhnw.ch
-
 ## Overview
-In [this project](http://www.tamberg.org/fhnw/2025/hs/IproIndoorClimate.pdf) you will use CO2 sensors to measure indoor climate.
+In [this project](http://www.tamberg.org/fhnw/2025/hs/IproIndoorClimate.pdf) I will use CO2 sensors to measure indoor climate.
 
 ## Levels
 To keep you motivated, this project template is split into levels.
 
 - [x] Level 0: [Getting started](level-0/README.md)
-- [ ] Level 1: [Logging sensor data](level-1/README.md)
+- [x] Level 1: [Logging sensor data](level-1/README.md)
 - [ ] Level 2: [Analyzing your data](level-2/README.md)
 - [ ] Level 3: [Monitoring remotely](level-3/README.md)
 - [ ] Level 4: [Scaling up and out](level-4/README.md)
@@ -18,25 +16,34 @@ To keep you motivated, this project template is split into levels.
 ## Results
 Each level results in a working prototype, built from building blocks.
 
+### Level 1
+My prototype after this level is a working sensor that sends data over serial, a script written in go that reads the serial port and stores the data in csv files and a python script that reads the files and plots a chart using the data.
+In regard to my project goal (getting to know MQTT) this concludes Level 1 for me. I could certainly improve this prototype either by drawing plots using live data and/or by storing the data in a proper database.
+
 ## Goals
-Goals describe what to achieve, in order to complete a level/result.
+I am used to writing backends and frontends to process data, but working with sensors is entirely new to me.
+So my goal for this project is to understand how I can work with simple sensors. How do I have to receive and process the data inorder to do something meaningful with it.  
+Ultimately, I want to understand and use MQTT. 
 
-## Building blocks
-Each building block shows how to solve a specific, small issue.
-
-## Side quests
-Each level has side quests, things to try, directions to explore.
+Steps: 
+- [x] Get to know micro:bit
+- [x] read and process sensor data over a serial connection
+- [ ] read and process sensor data over a WiFi connection
+- [ ] implement MQTT service to receive data from n sensors and process their data
+- [ ] implement backend that sends structured sensor data to elastic
+- [ ] create a simple kibana dashboard
+- [ ] (optional) handwrite my own web frontend for data visualization
 
 ## Language
-You choose as you like, we provide Python and Java examples.
+I am trying to experiment with languages. I'll use whatever programming language I think is most suitable for the task at hand.
 
 ## "AI" tools
-> Note: No "AI" is needed, you're welcome to learn / think for yourself :)
-
-If you use [prompts](prompts), save them, e.g. for code [based on](https://github.com/fhnw-imvs/fhnw-ipro-indoor-climate/blob/main/level-1/Python/csv_write/csv_write.py#L2) a [prompt](https://github.com/fhnw-imvs/fhnw-ipro-indoor-climate/blob/main/prompts/2025-08-29T09-45-00Z.txt).
+No LLM code is copied into this repository directly. But depending on the task, I'll be consulting LLMs more. Similar to how I used to use Google to learn something, I now use LLMs to learn about programming patterns. In the project-log.md I will keep track of the tasks where I heavily relied on LLM input.
 
 ## Support
 Contact thomas.amberg@fhnw.ch to get an MS Teams invite.
+
+> Note: Work in progress. Interested? Contact thomas.amberg@fhnw.ch
 
 ## License
 Unless noted otherwise.
@@ -45,5 +52,4 @@ Unless noted otherwise.
 * Content by [A. Kennel](https://www.fhnw.ch/de/personen/andrea-kennel), [G. Deck](https://www.fhnw.ch/en/people/klaus-georg-deck), [T. Amberg](https://www.fhnw.ch/en/people/thomas-amberg), FHNW is licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
 
 Publishing your own code?
-
-* [Choose an open source license](https://choosealicense.com/), e.g. the simple [MIT License](https://choosealicense.com/licenses/mit/)
+[MIT License](https://choosealicense.com/licenses/mit/)

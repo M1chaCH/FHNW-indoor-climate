@@ -1,22 +1,22 @@
 # Level 0: Getting started
-To manage your time, update this schedule.
+A rudimentary overview of the Project plan.
 
 ```mermaid
 gantt
     dateFormat YYYY-MM-DD
     tickInterval 1day
     excludes Saturday, Sunday
-    Level 0 :t0, 2025-09-01, 2d
-    Level 1 :t1, after t0, 2d
-    Level 2 :t2, after t1, 2d
+    Getting Started :t0, 2026-01-12, 2d
+    Elastic / Kibana :t1, after t0, 2d
+    MQTT & proper Backend :t2, after t1, 4d
 ```
 
 ## Goals
 To finish the level, achieve these goals.
 
-- [ ] Have a rough plan when to do what
-- [ ] Check in with your support team
-- [ ] Be ready to work on this project
+- [x] Have a rough plan when to do what
+- [x] Check in with your support team
+- [x] Be ready to work on this project
 
 ## Building blocks
 To achieve the goals, use these blocks.
@@ -207,6 +207,5 @@ Edit each [README.md](README.md) to check off `[x]` done items.
 ## Side quests
 To learn more, consider these side quests.
 
-- [ ] Set up an SSH key to simplify Github usage
-- [ ] Set up a terminal program like screen or PuTTY
-- [ ] Get used to Windows Subsystem for Linux (WSL 2.0)
+- [x] Set up an SSH key to simplify Github usage
+- [x] Set up a terminal program like screen or PuTTY

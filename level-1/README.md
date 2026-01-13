@@ -6,11 +6,11 @@ To document your setup, update this sketch.
 ## Goals
 To finish the level, achieve these goals.
 
-- [ ] Read a CO2 sensor, on the Microbit
-- [ ] Send data via USB, to your computer
-- [ ] Store sensor data, on your computer
-- [ ] Read stored data, on your computer
-- [ ] Show historical data as a chart
+- [x] Read a CO2 sensor, on the Microbit
+- [x] Send data via USB, to your computer
+- [x] Store sensor data, on your computer
+- [x] Read stored data, on your computer
+- [x] Show historical data as a chart
 - [ ] Build an end-to-end prototype
 
 ## Building blocks
