@@ -9,8 +9,8 @@ To keep you motivated, this project template is split into levels.
 
 - [x] Level 0: [Getting started](level-0/README.md)
 - [x] Level 1: [Logging sensor data](level-1/README.md)
-- [ ] Level 2: [Analyzing your data](level-2/README.md)
-- [ ] Level 3: [Monitoring remotely](level-3/README.md)
+- [x] (SKIPPED) Level 2: [Analyzing your data](level-2/README.md)
+- [x] Level 3: [Monitoring remotely](level-3/README.md)
 - [ ] Level 4: [Scaling up and out](level-4/README.md)
 
 ## Results
@@ -20,6 +20,15 @@ Each level results in a working prototype, built from building blocks.
 My prototype after this level is a working sensor that sends data over serial, a script written in go that reads the serial port and stores the data in csv files and a python script that reads the files and plots a chart using the data.
 In regard to my project goal (getting to know MQTT) this concludes Level 1 for me. I could certainly improve this prototype either by drawing plots using live data and/or by storing the data in a proper database.
 
+### Level 2
+This level was skipped.
+
+### Level 3
+<kbd><img src="l3_kibana_dashboard.png" height="320"/></kbd>
+
+My prototype from the third level is a working sensor that sends json data every 5 seconds to an online web api. This service then enriches the data and sends it to an Elasticsearch DB. The data can be read and evaluated in Kibana. The [Kibana Dashboard can be accessed here](https://kibana.michu-tech.com/s/indoor-climate/app/dashboards#/view/9df80984-140a-48b2-b364-bd9b4bb9c807?_g=(filters:!(),refreshInterval:(pause:!t,value:60000),time:(from:now-60m,to:now))). Use the User `ipro` to login. Reach out to me for the password.
+
+This concludes level 3 for me. In the next level, I'll try to improve some of the shortcomings of this prototype.
 ## Goals
 I am used to writing backends and frontends to process data, but working with sensors is entirely new to me.
 So my goal for this project is to understand how I can work with simple sensors. How do I have to receive and process the data inorder to do something meaningful with it.  
@@ -28,10 +37,10 @@ Ultimately, I want to understand and use MQTT.
 Steps: 
 - [x] Get to know micro:bit
 - [x] read and process sensor data over a serial connection
-- [ ] read and process sensor data over a WiFi connection
+- [x] read and process sensor data over a WiFi connection
 - [ ] implement MQTT service to receive data from n sensors and process their data
-- [ ] implement backend that sends structured sensor data to elastic
-- [ ] create a simple kibana dashboard
+- [x] implement backend that sends structured sensor data to elastic
+- [x] create a simple kibana dashboard
 - [ ] (optional) handwrite my own web frontend for data visualization
 
 ## Language

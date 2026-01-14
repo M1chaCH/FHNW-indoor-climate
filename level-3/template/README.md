@@ -6,24 +6,24 @@ To document your setup, update this sketch.
 ## Goals
 To finish the level, achieve these goals.
 
-- [ ] Read a CO2 sensor, on the FeatherS3
-- [ ] Send data via USB, to your computer
-- [ ] Store sensor data, in a cloud backend
-- [ ] Read stored data, from a cloud backend
-- [ ] Show live data in a Web dashboard
-- [ ] Build an end-to-end prototype
+- [x] Read a CO2 sensor, on the FeatherS3
+- [x] Send data via USB, to your computer
+- [x] Store sensor data, in a cloud backend
+- [x] Read stored data, from a cloud backend
+- [x] Show live data in a Web dashboard
+- [x] Build an end-to-end prototype
 
 ## Building blocks
 To achieve the goals, use these blocks.
 
-- [ ] [Get a FeatherS3 hardware kit](#get-a-feathers3-hardware-kit)
-- [ ] [Set up the Mu editor for CircuitPython](#set-up-the-mu-editor-for-circuitpython)
-- [ ] [Set up the FeatherS3 for CircuitPython](#set-up-the-feathers3-for-circuitpython)
-- [ ] [Use the FeatherS3 with CircuitPython](#use-the-feathers3-with-circuitpython)
-- [ ] [Read a value from an I2C sensor](#read-a-value-from-an-i2c-sensor)
-- [ ] [Write ASCII bytes to a serial port](#write-ascii-bytes-to-a-serial-port)
-- [ ] [Connect to a local Wi-Fi network](#connect-to-a-local-wi-fi-network)
-- [ ] [Send a POST request to a Web server](#send-a-post-request-to-a-web-server)
+- [x] [Get a FeatherS3 hardware kit](#get-a-feathers3-hardware-kit)
+- [x] [Set up the Mu editor for CircuitPython](#set-up-the-mu-editor-for-circuitpython)
+- [x] [Set up the FeatherS3 for CircuitPython](#set-up-the-feathers3-for-circuitpython)
+- [x] [Use the FeatherS3 with CircuitPython](#use-the-feathers3-with-circuitpython)
+- [x] [Read a value from an I2C sensor](#read-a-value-from-an-i2c-sensor)
+- [x] [Write ASCII bytes to a serial port](#write-ascii-bytes-to-a-serial-port)
+- [x] [Connect to a local Wi-Fi network](#connect-to-a-local-wi-fi-network)
+- [x] [Send a POST request to a Web server](#send-a-post-request-to-a-web-server)
 - [ ] ...
 - [ ] ...
 
