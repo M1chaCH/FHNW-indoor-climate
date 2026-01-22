@@ -1,0 +1,32 @@
+syntax = "proto3";
+package sensorhub;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/M1chaCH/FHNW-indoor-climate/sensorhub/proto_types"
+
+message SensorData {
+    required string device_id = 1;
+    optional string ip = 2;
+    optional string device_name = 3;
+
+    enum SensorValueType {
+        STRING = 0;
+        INT32 = 1;
+        DOUBLE = 2;
+        BOOL = 3;
+    }
+
+    message Measurement {
+        required string sensor_type = 1;
+        required SensorValueType sensor_value_type = 2;
+        optional string read_timestamp = 3;
+        optional string sensor_value_name 4;
+        optional string string_value = 10;
+        optional int32 int_value = 11;
+        optional double double_value = 12;
+        optional bool flag_value = 13;
+    }
+
+    repeated Measurement measurements = 4;
+}

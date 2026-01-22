@@ -179,3 +179,43 @@ mindmap
       dynamic mappings? | if i want to support any sensor
 
 ```
+
+The actual project and its plans are documented in the README.md in the level-4 directory.
+
+### Technology evaluation
+
+#### HiveMQ vs Mosquitto
+These are the two relevant MQTT Brokers for me. Now I need to decide which one fits my project better. 
+HiveMQ has a WebUI that allows for a lot easier debugging and analysis. In HiveMQ you can also write custom plugins to process messages before any subscriber sees them. 
+But HiveMQ is a lot heavier than Mosquitto. Mosquitto could even be run on a raspberry PI.
+HiveMQ could be scaled vertically, but I think I do not need this anyways.
+
+So now the question arises, why so I need an MQTT broker? What benefits do I gain by this? Its basically just a message bus... Well, its not just a message bus. It allows the micro controller to send data in a very lightweight format. Also, this is important, MQTT allows for easy bi-directional communication. With this in mind, I should certainly use an MQTT broker. But which one.
+
+I'll decide for Mosquitto as my MQTT broker. Because it is lightweight and I do not think that I need the heavy features from HiveMQ and I can run Mosquitto on my raspberry pi.
+
+
+#### WiFi vs Bluetooth
+The ESP32 needs to send data to an MQTT broker. And the ESP32 needs to be able to receive configuration changes from any MQTT message sender.  
+If I were to decide for WiFi, this would be simple. The ESP can just connect to an MQTT broker and let the broker handle the communication.
+If I were to decide for BLE, this would be a lot more complex. Because the MQTT broker is only available over TCP. This means the I would have to setup & program a layer that copies the bi-directional communication from MQTT to a Bluetooth device. It seems very hard to implement this reliably. 
+
+So I'll decide for WiFi, but if there is time remaining, I'll figure out how my app would work if data was sent over bluetooth.
+
+
+#### Battery vs wired power
+Initially, I'll use wired power. It makes many things easier. First, the hardware is less fragile / complicated. And secondly, I can use WiFi without having to worry about power consumption. Especially since I plan to send much data over the Network, i'll probably be struggling hard with power efficiency.
+
+
+### Data structure
+
+### Progress
+Now that the technology questions are mostly out of the way, we can begin with the actual implementation. I've started with setting up an MQTT broker (mosquitto) on my raspberry pi. This went almost perfectly, I had some issues with the network, as always, but thats fine and I managed to solve it in the end. 
+
+Then since I've decided to use protobuf for the data transmission, we first need to understand how protocol buffers actually work and how I should write a .proto file. So lets read into this: https://protobuf.dev/getting-started/gotutorial/.
+Okay, .proto files are relatively easy to understand and integrate very nice into a go project. But now how does it work for circuitpython on the FeatherS3? This is where it gets a bit more trickier, I think. Found this: https://github.com/dogtopus/minipb/blob/master/minipb.py. But how do I run this in to FeatherS3, i need to install the dependencies as well.
+
+After some figuring out I managed to get everything running and send sensor data from the microprocessor to an MQTT broker. Nice!!
+
+But I ran into one python pitfall that caught me of guard. I am sending the IP-Address in my data body. On the FeatherS3, i get the IP like this: `wifi.radio.ipv4_address`. This returns an "Address" object, but i was expecting a string to be returned. Then during the encoding of my data object, there was an error thrown, because "Address" cannot be encoded. After a rather long search for the problem, i stepped down and asked Gemini, who then found the issue...
+The solution was then to simply convert `wifi.radio.ipv4_address` into a string.
