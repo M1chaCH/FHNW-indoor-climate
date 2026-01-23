@@ -120,3 +120,5 @@ Here is a list of Ideas I've decided not to implement for various reasons. If I 
 - The setup will not be 100% secure.
     Known issues:
     - whoever can get access to an authorized sensor ID and name will be able to mimic this sensor and is authorized.
+- a microchip cannot have the same sensor type connected multiple times...
+- the error handling in the backend is not really good. If any network error or so occurs data might be lost but since the sensor data delivery is not 100% essential, I've skipped this for the first part

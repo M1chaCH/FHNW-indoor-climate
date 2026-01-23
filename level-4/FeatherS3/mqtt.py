@@ -14,6 +14,10 @@ TOPIC_DATA = "sensor/data"
 
 def init_connection(socket_pool, ssl_context):
     global mqtt_client
+
+    if mqtt_client != None:
+        mqtt_client.disconnect()
+
     mqtt_client = MQTT.MQTT(
         broker=broker_url,
         port=broker_port,

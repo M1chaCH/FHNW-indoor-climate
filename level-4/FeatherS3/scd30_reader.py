@@ -18,21 +18,21 @@ def init_sensor():
     scd.temperature_offset = os.getenv("SCD30_TEMPERATURE_OFFSET", 0)
 
 
-def get_data(ip, device_name):
+def get_data():
     retry_count = 0
     while True:
         try:
             if scd.data_available:
-                return proto.SensorData(device_id=util.get_device_id(), ip=ip, device_name=device_name, measurements=[create_proto_measurement("co2", scd.CO2), create_proto_measurement("temp", scd.temperature), create_proto_measurement("hum", scd.relative_humidity)])
+                return [create_proto_measurement("co2", scd.CO2), create_proto_measurement("temp", scd.temperature), create_proto_measurement("hum", scd.relative_humidity)]
             time.sleep(0.2)
         except Exception as e:
             retry_count = retry_count + 1
             exception_name = type(e).__name__
-            print(f"Failed to load data from sensor: {exception_name}: {e}")
+            print(f"Failed to load data from scd30 sensor: {exception_name}: {e}")
             time.sleep(0.5)
 
             if retry_count > 5:
-                raise Exception("Failed to load data from sensor") from e
+                raise Exception("Failed to load data from scd30 sensor") from e
             
 def create_proto_measurement(key, value):
-    return proto.SensorData.Measurement(sensor_type="scd30", sensor_value_type=proto.SENSOR_VALUE_TYPE_DOUBLE, read_timestamp=util.get_timestamp(), sensor_value_name=key,double_value=value,)
+    return proto.Measurement(sensor_type="scd30", sensor_value_type=proto.SENSOR_VALUE_TYPE_DOUBLE, read_timestamp=util.get_timestamp(), sensor_value_name=key,double_value=value,)
