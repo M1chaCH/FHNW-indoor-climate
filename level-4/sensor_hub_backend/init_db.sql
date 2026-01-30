@@ -7,4 +7,11 @@ create table devices (
     last_reading varchar(255),
     last_reading_time timestamp,
     authorized boolean default false
-)
+);
+
+-- drop table if exists device_configs;
+
+create table device_configs (
+    device_id varchar(255) primary key,
+    config_json text
+);

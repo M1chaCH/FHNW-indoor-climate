@@ -12,6 +12,12 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+var sensorDataChannel = make(chan proto_types.SensorData)
+
+func SubscribeToSensorDataChannel() <-chan proto_types.SensorData {
+	return sensorDataChannel
+}
+
 func HandleSensorDataReceived(p *paho.Publish) {
 	sensorData := &proto_types.SensorData{}
 
@@ -29,7 +35,7 @@ func HandleSensorDataReceived(p *paho.Publish) {
 
 	ok, err := sql.IsDeviceAuthorizedCached(entity.DeviceId)
 	if err == nil && ok {
-		elastic.SendSensorDataToElastic(docs)
+		elastic.SendSensorDataToElasticDebounced(docs)
 	} else {
 		if err != nil {
 			fmt.Printf("Failed to check device authorization (sending data to buffer): %s\n", err)
@@ -38,6 +44,7 @@ func HandleSensorDataReceived(p *paho.Publish) {
 		}
 		buffer.PutSensorDataToBuffer(docs)
 	}
+	sensorDataChannel <- *sensorData
 }
 
 func createDeviceEntity(sensorData *proto_types.SensorData) sql.DeviceEntity {
@@ -53,7 +60,7 @@ func createDeviceEntity(sensorData *proto_types.SensorData) sql.DeviceEntity {
 	firstTime := time.Time{}
 
 	for _, measurement := range sensorData.Measurements {
-		entity.LastReading += measurement.GetSensorValueName() + ":" + readValueAsString(measurement) + "|"
+		entity.LastReading += measurement.GetSensorValueName() + ":" + ReadMeasurementValueHumanized(measurement) + "|"
 
 		measurementTime, err := parseTimestamp(measurement)
 		if err != nil {
@@ -91,7 +98,7 @@ func groupSensorReadings(sensorData *proto_types.SensorData) []*elastic.SensorDa
 			}
 			sensorReadings[measurement.GetSensorType()] = sensorReading
 		}
-		sensorReading.Values[measurement.GetSensorValueName()] = readValue(measurement)
+		sensorReading.Values[measurement.GetSensorValueName()] = ReadMeasurementValue(measurement)
 	}
 
 	docs := make([]*elastic.SensorDataDocument, len(sensorReadings))
@@ -104,7 +111,7 @@ func groupSensorReadings(sensorData *proto_types.SensorData) []*elastic.SensorDa
 	return docs
 }
 
-func readValue(measurement *proto_types.SensorData_Measurement) interface{} {
+func ReadMeasurementValue(measurement *proto_types.SensorData_Measurement) interface{} {
 	switch measurement.SensorValueType {
 	case proto_types.SensorData_STRING:
 		return measurement.GetStringValue()
@@ -119,8 +126,23 @@ func readValue(measurement *proto_types.SensorData_Measurement) interface{} {
 	return nil
 }
 
-func readValueAsString(measurement *proto_types.SensorData_Measurement) string {
-	return fmt.Sprintf("%v", readValue(measurement))
+func ReadMeasurementValueHumanized(measurement *proto_types.SensorData_Measurement) string {
+	switch measurement.SensorValueType {
+	case proto_types.SensorData_STRING:
+		return measurement.GetStringValue()
+	case proto_types.SensorData_BOOL:
+		if measurement.GetFlagValue() {
+			return "✅"
+		}
+
+		return "❌"
+	case proto_types.SensorData_INT32:
+		return fmt.Sprintf("%d", measurement.GetIntValue())
+	case proto_types.SensorData_DOUBLE:
+		return fmt.Sprintf("%.2f", measurement.GetDoubleValue())
+	}
+
+	return ""
 }
 
 func parseTimestamp(measurement *proto_types.SensorData_Measurement) (time.Time, error) {

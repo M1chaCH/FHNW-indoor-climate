@@ -1,0 +1,25 @@
+syntax = "proto3";
+package sensorhub;
+
+option go_package = "./proto_types";
+
+message DeviceConfigOptions {
+    enum ConfigOptionValueType {
+        STRING = 0;
+        INT32 = 1;
+        DOUBLE = 2;
+        BOOL = 3;
+    }
+
+    message ConfigOption {
+        string config_name = 1;
+        ConfigOptionValueType config_type = 2;
+        optional string string_value = 10;
+        optional int32 int_value = 11;
+        optional double double_value = 12;
+        optional bool flag_value = 13;
+    }
+
+    string device_id = 1;
+    repeated ConfigOption options = 2;
+}

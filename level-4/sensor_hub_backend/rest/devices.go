@@ -1,38 +1,64 @@
 package rest
 
 import (
+	"fmt"
+	"io"
 	"sensor_hub_backend/elastic/buffer"
+	"sensor_hub_backend/lifecycle"
+	"sensor_hub_backend/rest/renderer"
 	"sensor_hub_backend/sql"
 
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterAuthorizedDevicesRoutes(router gin.IRouter) {
-	router.GET("", getDevices)
+func RegisterDevicesRoutes(router gin.IRouter) {
+	router.GET("", getDevicesStream)
 	router.POST("/authorize/:device_id", postToggleAuthorizeDevice)
 }
 
-type deviceListDto struct {
-	Device     sql.DeviceEntity `json:"device"`
-	BufferSize int              `json:"buffer_size"`
-}
+func getDevicesStream(c *gin.Context) {
+	stopContext := lifecycle.GetStopContext()
 
-func getDevices(c *gin.Context) {
-	devices, err := sql.SelectDevices()
-	if err != nil {
-		c.AbortWithStatusJSON(500, gin.H{"error": err.Error()})
-		return
-	}
+	c.Writer.Header().Set("Content-Type", "text/event-stream")
+	c.Writer.Header().Set("Cache-Control", "no-cache")
+	c.Writer.Header().Set("Connection", "keep-alive")
 
-	dtos := make([]deviceListDto, len(devices))
-	for i, device := range devices {
-		dtos[i] = deviceListDto{
-			Device:     device,
-			BufferSize: buffer.GetBufferLength(device.DeviceId),
+	deviceChan := make(chan []sql.DeviceEntity)
+
+	go func() {
+		err := sql.SubscribeToDevices(deviceChan, c.Request.Context())
+		if err != nil {
+			fmt.Printf("Subscription to devices failed due to an error: %s\n", err)
+		} else {
+			fmt.Println("Subscription to devices closed")
 		}
-	}
+	}()
 
-	c.JSON(200, dtos)
+	c.Stream(func(w io.Writer) bool {
+		select {
+		case devices := <-deviceChan:
+			dtos := make([]*renderer.DeviceListDto, len(devices))
+			for i, device := range devices {
+				dtos[i] = &renderer.DeviceListDto{
+					Device:     device,
+					BufferSize: buffer.GetBufferLength(device.DeviceId),
+				}
+			}
+
+			htmlString, err := renderer.RenderDeviceHtml(dtos)
+			if err != nil {
+				fmt.Printf("Failed to render device list: %s\n", err)
+				return false
+			}
+
+			c.SSEvent("devices-changed", htmlString)
+			return true
+		case <-c.Request.Context().Done():
+			return false
+		case <-stopContext.Done():
+			return false
+		}
+	})
 }
 
 func postToggleAuthorizeDevice(c *gin.Context) {

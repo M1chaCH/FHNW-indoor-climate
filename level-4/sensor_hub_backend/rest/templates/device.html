@@ -1,0 +1,23 @@
+{{ range . }}
+
+<div class="device">
+    <h3>{{ .Device.DeviceId }} - {{ .Device.Name }}</h3>
+    <p><label>IP: </label>{{ .Device.LastIp }}</p>
+    {{ if .Device.Authorized }}
+    {{ else }}
+        <p><label>Buffer Size: </label>{{ .BufferSize }}</p>
+    {{ end }}
+    <p><label>Is Authorized: </label>{{ if .Device.Authorized }} ✅ {{ else }} ❌ {{ end }}</p>
+
+    <div class="button-row">
+        <button hx-post="/api/v1/devices/authorize/{{ .Device.DeviceId }}">
+            {{ if .Device.Authorized }} Block
+            {{ else }} Authorize {{ end }}
+        </button>
+        <button hx-get="/api/v1/devices/config/{{ .Device.DeviceId }}" hx-swap="afterend">
+            Edit Config
+        </button>
+    </div>
+</div>
+
+{{ end }}

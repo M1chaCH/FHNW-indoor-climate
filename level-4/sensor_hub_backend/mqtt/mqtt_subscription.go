@@ -3,6 +3,7 @@ package mqtt
 import (
 	"fmt"
 	"sensor_hub_backend/lifecycle"
+	"sensor_hub_backend/mqtt/device_config"
 	"sensor_hub_backend/mqtt/sensor/sensor_data"
 	"strings"
 
@@ -11,7 +12,9 @@ import (
 )
 
 const (
-	topicSensorData = "sensor/data"
+	topicSensorData         = "sensor/data"
+	topicDeviceConfig       = "device/config"
+	topicUpdateDeviceConfig = "device/config/update"
 )
 
 func initSubscriptions(cm *autopaho.ConnectionManager) error {
@@ -21,6 +24,11 @@ func initSubscriptions(cm *autopaho.ConnectionManager) error {
 		Subscriptions: []paho.SubscribeOptions{
 			{
 				Topic:             topicSensorData + "/+",
+				QoS:               0,
+				RetainAsPublished: false,
+			},
+			{
+				Topic:             topicDeviceConfig + "/+",
 				QoS:               0,
 				RetainAsPublished: false,
 			},
@@ -41,6 +49,8 @@ func onPublishReceived(p paho.PublishReceived) (bool, error) {
 
 	if strings.HasPrefix(p.Packet.Topic, topicSensorData) {
 		sensor_data.HandleSensorDataReceived(p.Packet)
+	} else if strings.HasPrefix(p.Packet.Topic, topicDeviceConfig) {
+		device_config.HandleDeviceConfigReceived(p.Packet)
 	} else {
 		fmt.Printf("No handler found for topic: %s\n", p.Packet.Topic)
 	}

@@ -1,6 +1,10 @@
 package sql
 
-import "time"
+import (
+	"context"
+	"sensor_hub_backend/lifecycle"
+	"time"
+)
 
 type DeviceEntity struct {
 	DeviceId        string    `db:"device_id" json:"device_id"`
@@ -12,6 +16,7 @@ type DeviceEntity struct {
 }
 
 var authorizedDevicesCache = make(map[string]bool)
+var deviceChanged = make(chan byte)
 
 func SelectDevices() ([]DeviceEntity, error) {
 	devices := make([]DeviceEntity, 0)
@@ -20,11 +25,37 @@ func SelectDevices() ([]DeviceEntity, error) {
 	return devices, err
 }
 
+func SubscribeToDevices(channel chan []DeviceEntity, stopContext context.Context) error {
+	devices, err := SelectDevices()
+	if err != nil {
+		return err
+	}
+	channel <- devices
+
+	shutdownContext := lifecycle.GetStopContext()
+
+	for {
+		select {
+		case <-stopContext.Done():
+			return nil
+		case <-shutdownContext.Done():
+			return nil
+		case <-deviceChanged:
+			devices, err := SelectDevices()
+			if err != nil {
+				return err
+			}
+			channel <- devices
+		}
+	}
+}
+
 func ToggleDeviceAuthorization(deviceId string) (bool, error) {
 	db := getDb()
 	_, err := db.Exec("UPDATE devices SET authorized = NOT authorized WHERE device_id = $1", deviceId)
 
 	if err == nil {
+		deviceChanged <- 1
 		v, ok := authorizedDevicesCache[deviceId]
 		if ok {
 			authorizedDevicesCache[deviceId] = !v

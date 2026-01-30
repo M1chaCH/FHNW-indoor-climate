@@ -1,0 +1,27 @@
+<div class="sensor-data-row">
+  <div class="device-head">
+    <p><label>ID</label>: {{ .Id }}</p>
+    <p><label>Name</label>: {{ .Name }}</p>
+    <p><label>IP</label>: {{ .Ip }}</p>
+    <p><label>Written to buffer</label>: {{ .Buffered }}</p>
+  </div>
+
+  <div class="measurements">
+    {{ range .Measurements }}
+      <div class="measurement">
+        <div style="grid-column: 1 / span 2; display: flex; flex-flow: column;">
+          <p><label>Sensor Type</label>:  {{ .SensorType }}</p>
+          <p><label>Time</label>:  {{ .ReadTimestamp }}</p>
+          <p><label>Value Type</label>:  {{ .SensorValueType }}</p>
+        </div>
+        <div class="centered-value" style="font-weight: 300;">
+          {{ .SensorValueName }}
+        </div>
+        <div class="centered-value">
+          {{ .Value }}
+        </div>
+      </div>
+    {{ end }}
+  </div>
+  <hr/>
+</div>

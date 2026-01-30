@@ -13,14 +13,18 @@ import (
 
 func RunGinServer() {
 	router := gin.Default()
-	router.GET("/api/v1/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
+
+	router.LoadHTMLGlob("rest/templates/*")
+	RegisterIndexRoutes(router)
 
 	devicesGroup := router.Group("/api/v1/devices")
-	RegisterAuthorizedDevicesRoutes(devicesGroup)
+	RegisterDevicesRoutes(devicesGroup)
+
+	deviceConfigGroup := router.Group("/api/v1/devices/config")
+	RegisterDeviceConfigRoutes(deviceConfigGroup)
+
+	sensorGroup := router.Group("/api/v1/sensor")
+	RegisterSensorRoutes(sensorGroup)
 
 	addr := "0.0.0.0:8080"
 	srv := &http.Server{

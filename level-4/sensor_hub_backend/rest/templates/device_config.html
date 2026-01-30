@@ -1,0 +1,163 @@
+<style>
+  .backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100svw;
+    height: 100svh;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    pointer-events: none;
+  }
+
+  .device-config-dialog {
+    pointer-events: all;
+    background-color: var(--dark-gray);
+    padding: 2rem;
+    border-radius: 0.5rem;
+
+    max-width: 800px;
+    max-height: 80vh;
+    margin: 20px auto;
+    overflow-y: auto;
+  }
+
+  .device-config-dialog .options {
+    margin: 1rem 0;
+  }
+
+  .device-config-dialog .option-group {
+    display: flex;
+    flex-flow: row wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .option-group h4 {
+    display: block;
+    width: 100%;
+    margin: 0;
+  }
+
+  .option-group label {
+    position: relative;
+    padding-top: 0.8rem;
+    height: 48px;
+    flex: 1 0 320px;
+  }
+
+  .option-group label span {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+  }
+
+  .option-group label input:is([type="checkbox"]) {
+    width: 100%;
+    height: 25px;
+    background-color: transparent;
+    color: var(--foreground);
+    cursor: pointer;
+  }
+
+  .option-group label input:not([type="checkbox"]) {
+    all: unset;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    border: none;
+    border-bottom: 1px solid var(--light-gray);
+    color: var(--foreground);
+    font-weight: 500;
+    font-size: 0.8rem;
+    transition: all 200ms ease-out;
+  }
+
+  .option-group label input:not([type="checkbox"]):focus,
+  .option-group label input:not([type="checkbox"]):active,
+  .option-group label:hover input:not([type="checkbox"]) {
+    border-bottom: 2px solid var(--light-gray);
+    filter: brightness(1.2);
+  }
+</style>
+
+<div class="backdrop" id="device-config-dialog-backdrop">
+  <div class="device-config-dialog">
+    <h2 style="margin-top: 0;">Device Configuration</h2>
+    <p style="font-weight: 200;">DeviceId: {{ .DeviceId }}</p>
+
+    <form class="options">
+      <div class="option-group">
+        <h4>Integer Options</h4>
+        {{ range .IntOptions }}
+        <label>
+          <span>{{ .Name }}</span>
+          <input type="number" step="1" pattern="\d*" name="{{ .Name }}" value="{{ .Value }}" data-value-type="{{ .Type }}" />
+        </label>
+        {{ end }}
+      </div>
+      <div class="option-group">
+        <h4>String Options</h4>
+        {{ range .StringOptions }}
+        <label>
+          <span>{{ .Name }}</span>
+          <input type="text" name="{{ .Name }}" value="{{ .Value }}" data-value-type="{{ .Type }}" />
+        </label>
+        {{ end }}
+        
+      </div>
+      <div class="option-group">
+        <h4>Double Options</h4>
+        {{ range .DoubleOptions }}
+        <label>
+          <span>{{ .Name }}</span>
+          <input type="number" name="{{ .Name }}" value="{{ .Value }}" data-value-type="{{ .Type }}" />
+        </label>
+        {{ end }}
+        
+      </div>
+      <div class="option-group">
+        <h4>Flag Options</h4>
+        {{ range .FlagOptions }}
+        <label>
+          <span>{{ .Name }}</span>
+          <input type="checkbox" name="{{ .Name }}" {{ if (eq .Value "true") }}checked{{ end }} data-value-type="{{ .Type }}" />
+        </label>
+        {{ end }}
+        
+      </div>
+    </form>
+    <div class="button-row">
+      <button type="button"
+              hx-post="/api/v1/devices/config/{{ .DeviceId }}"
+              hx-swap="afterend"
+              hx-vals="js:{data: collectFormData()}"
+              hx-headers='{"Content-Type": "application/json"}'>
+        Save
+      </button>
+      <button hx-post="/api/v1/devices/config/{{ .DeviceId }}/push" hx-swap="afterend">Push config</button>
+      <button id="device-config-dialog-close">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById("device-config-dialog-close").onclick = () => {
+  document.getElementById("device-config-dialog-backdrop").remove();
+}
+
+function collectFormData() {
+  const inputs = document.querySelectorAll(".options input");
+  const data = Array.from(inputs).map(input => ({
+    name: input.name,
+    value: input.type === "checkbox" ? input.checked + "" : input.value,
+    type: input.getAttribute("data-value-type")
+  }));
+  return JSON.stringify(data);
+}
+</script>

@@ -10,6 +10,8 @@ import (
 	"github.com/eclipse/paho.golang/paho"
 )
 
+var connection *autopaho.ConnectionManager
+
 func RunMqttClient() {
 	urlString := os.Getenv("MQTT_BROKER_URL")
 	user := os.Getenv("MQTT_BROKER_USER")
@@ -39,16 +41,16 @@ func RunMqttClient() {
 
 	stopContext := lifecycle.GetStopContext()
 
-	c, err := autopaho.NewConnection(stopContext, clientConfig)
+	connection, err = autopaho.NewConnection(stopContext, clientConfig)
 	if err != nil {
 		panic(err)
 	}
 
-	if err = c.AwaitConnection(stopContext); err != nil {
+	if err = connection.AwaitConnection(stopContext); err != nil {
 		panic(err)
 	}
 
 	<-stopContext.Done()
 	fmt.Println("Stopping MQTT service...")
-	<-c.Done()
+	<-connection.Done()
 }

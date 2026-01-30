@@ -95,7 +95,7 @@ func upsertQueuedDevices() {
 	}
 
 	for _, device := range devices {
-		_, err = tx.NamedExec(`
+		statement, err := tx.PrepareNamed(`
 		INSERT INTO devices(device_id, name, last_ip, last_reading, last_reading_time)
 		VALUES (:device_id, :name, :last_ip, :last_reading, :last_reading_time)
 		ON CONFLICT (device_id) 
@@ -103,12 +103,25 @@ func upsertQueuedDevices() {
 		                  last_reading = :last_reading, 
 		                  last_reading_time = :last_reading_time,
 		                  name = :name
-		`, device)
+		RETURNING (XMAX = 0) as inserted
+		`)
 
 		if err != nil {
+			fmt.Printf("Failed to prepare upsert statement for device %s: %s\n", device.DeviceId, err)
+			continue
+		}
+
+		var inserted bool
+		if err := statement.Get(&inserted, device); err != nil {
 			fmt.Printf("Failed to upsert device %s: %s\n", device.DeviceId, err)
 			continue
 		}
+
+		if inserted {
+			deviceChanged <- 1
+		}
+
+		statement.Close()
 	}
 
 	err = tx.Commit()

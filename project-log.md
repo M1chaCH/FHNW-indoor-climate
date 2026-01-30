@@ -207,8 +207,6 @@ So I'll decide for WiFi, but if there is time remaining, I'll figure out how my 
 Initially, I'll use wired power. It makes many things easier. First, the hardware is less fragile / complicated. And secondly, I can use WiFi without having to worry about power consumption. Especially since I plan to send much data over the Network, i'll probably be struggling hard with power efficiency.
 
 
-### Data structure
-
 ### Progress
 Now that the technology questions are mostly out of the way, we can begin with the actual implementation. I've started with setting up an MQTT broker (mosquitto) on my raspberry pi. This went almost perfectly, I had some issues with the network, as always, but thats fine and I managed to solve it in the end. 
 
@@ -219,3 +217,8 @@ After some figuring out I managed to get everything running and send sensor data
 
 But I ran into one python pitfall that caught me of guard. I am sending the IP-Address in my data body. On the FeatherS3, i get the IP like this: `wifi.radio.ipv4_address`. This returns an "Address" object, but i was expecting a string to be returned. Then during the encoding of my data object, there was an error thrown, because "Address" cannot be encoded. After a rather long search for the problem, i stepped down and asked Gemini, who then found the issue...
 The solution was then to simply convert `wifi.radio.ipv4_address` into a string.
+
+#### Frontend
+I have quite some frontend experience with many tools like Angular, React, Svelte and so on. But I have never used HTMX before. So in this project I want to use HTMX. Apparently it works very well in combination with go gin. 
+Is it better for my project than other frameworks? Well, I don't think so. The deployment should be 0 effort. Also it is cool to learn something new. But I think a common web framework could do the job just as good if not even a bit better. In HTMX the goal is to no write a single line of JavaScript. While this is nice, this also reduces your flexibilities. So lets see if I can implement my ideas without any JavaScript. 
+To get to know HTMX, I have also consulted LLMs.

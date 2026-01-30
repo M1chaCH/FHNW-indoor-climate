@@ -14,7 +14,7 @@ func PutSensorDataToBuffer(typedDocs []*elastic.SensorDataDocument) {
 	for _, doc := range typedDocs {
 		v, ok := sensorDataBuffer[doc.DeviceId]
 		if !ok {
-			v = make([]*elastic.SensorDataDocument, 1, sensorDataBufferSizeLimit)
+			v = make([]*elastic.SensorDataDocument, 0, sensorDataBufferSizeLimit)
 		}
 
 		if len(v) == sensorDataBufferSizeLimit {

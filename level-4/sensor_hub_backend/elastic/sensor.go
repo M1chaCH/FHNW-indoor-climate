@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sensor_hub_backend/lifecycle"
+	"sync"
 	"time"
 
 	"github.com/elastic/go-elasticsearch/v9/esapi"
@@ -17,6 +18,33 @@ type SensorDataDocument struct {
 	Timestamp  time.Time
 	DeviceName string
 	Values     map[string]interface{}
+}
+
+type lockableTypedDocs struct {
+	mu   sync.Mutex
+	docs []*SensorDataDocument
+}
+
+var sensorDataToSend *lockableTypedDocs
+
+func SendSensorDataToElasticDebounced(typedDocs []*SensorDataDocument) {
+	defer ensureUpdateLoopRunning()
+	defer func() {
+		if sensorDataToSend != nil {
+			sensorDataToSend.mu.Unlock()
+		}
+	}()
+
+	if sensorDataToSend == nil {
+		sensorDataToSend = &lockableTypedDocs{}
+		sensorDataToSend.mu.Lock()
+
+		sensorDataToSend.docs = typedDocs
+		return
+	}
+
+	sensorDataToSend.mu.Lock()
+	sensorDataToSend.docs = append(sensorDataToSend.docs, typedDocs...)
 }
 
 func SendSensorDataToElastic(typedDocs []*SensorDataDocument) {
@@ -93,8 +121,7 @@ func sendInBulk(typedDocs []*SensorDataDocument) {
 	}
 
 	stats := bi.Stats()
-	fmt.Printf("Indexed %d sensor data documents successfully\n", stats.NumIndexed)
-	fmt.Printf("Stats: %d flushed, %d failed\n", stats.NumFlushed, stats.NumFailed)
+	fmt.Printf("Indexed %d sensor data documents successfully (%d failed)\n", stats.NumFlushed, stats.NumFailed)
 }
 
 func createJsonBytes(typedDoc *SensorDataDocument) ([]byte, error) {
@@ -111,4 +138,44 @@ func createJsonBytes(typedDoc *SensorDataDocument) ([]byte, error) {
 	}
 
 	return json.Marshal(doc)
+}
+
+var ticker *time.Ticker
+
+func ensureUpdateLoopRunning() {
+	if ticker == nil {
+		ticker = time.NewTicker(30 * time.Second)
+		go periodicSendSensorDataToElastic()
+	}
+}
+
+func periodicSendSensorDataToElastic() {
+	fmt.Println("Starting periodic send sensor data to elastic loop")
+	ctx := lifecycle.GetStopContext()
+
+	for {
+		select {
+		case <-ticker.C:
+			if sensorDataToSend == nil {
+				break
+			}
+
+			sensorDataToSend.mu.Lock()
+			if len(sensorDataToSend.docs) == 0 {
+				sensorDataToSend.mu.Unlock()
+				break
+			}
+
+			docsToSend := make([]*SensorDataDocument, len(sensorDataToSend.docs))
+			copy(docsToSend, sensorDataToSend.docs)
+			sensorDataToSend.docs = make([]*SensorDataDocument, 0)
+			sensorDataToSend.mu.Unlock()
+
+			sendInBulk(docsToSend)
+
+			continue
+		case <-ctx.Done():
+		}
+		break
+	}
 }
