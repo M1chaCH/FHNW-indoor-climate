@@ -37,15 +37,15 @@ func getDevicesStream(c *gin.Context) {
 	c.Stream(func(w io.Writer) bool {
 		select {
 		case devices := <-deviceChan:
-			dtos := make([]*renderer.DeviceListDto, len(devices))
+			dtos := make([]*renderer.DeviceDto, len(devices))
 			for i, device := range devices {
-				dtos[i] = &renderer.DeviceListDto{
+				dtos[i] = &renderer.DeviceDto{
 					Device:     device,
 					BufferSize: buffer.GetBufferLength(device.DeviceId),
 				}
 			}
 
-			htmlString, err := renderer.RenderDeviceHtml(dtos)
+			htmlString, err := renderer.RenderDeviceHtml(&renderer.DeviceListDto{Devices: dtos})
 			if err != nil {
 				fmt.Printf("Failed to render device list: %s\n", err)
 				return false

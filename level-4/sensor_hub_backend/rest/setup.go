@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"sensor_hub_backend/lifecycle"
+	"sensor_hub_backend/rest/templates"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -14,7 +15,7 @@ import (
 func RunGinServer() {
 	router := gin.Default()
 
-	router.LoadHTMLGlob("rest/templates/*")
+	templates.InitTemplates(router)
 	RegisterIndexRoutes(router)
 
 	devicesGroup := router.Group("/api/v1/devices")

@@ -1,11 +1,8 @@
 package renderer
 
 import (
-	"bytes"
-	"text/template"
+	"sensor_hub_backend/rest/templates"
 )
-
-var sensorDataTemplate *template.Template
 
 type SensorDataTemplateDto struct {
 	Id           string
@@ -24,20 +21,5 @@ type SensorMeasurementTemplateDto struct {
 }
 
 func RenderSensorDataHtml(data *SensorDataTemplateDto) (string, error) {
-	if sensorDataTemplate == nil {
-		var file = "rest/templates/sensor_data.html"
-		var err error
-		sensorDataTemplate, err = template.New("sensor_data.html").ParseFiles(file)
-
-		if err != nil {
-			return "", err
-		}
-	}
-
-	buf := new(bytes.Buffer)
-	err := sensorDataTemplate.Execute(buf, data)
-	if err != nil {
-		return "", err
-	}
-	return buf.String(), nil
+	return templates.RenderTemplate("sensor_data.html", data)
 }

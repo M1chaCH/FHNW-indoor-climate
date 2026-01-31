@@ -1,8 +1,7 @@
 package renderer
 
 import (
-	"bytes"
-	"text/template"
+	"sensor_hub_backend/rest/templates"
 )
 
 type DeviceConfigOptionRenderingDto struct {
@@ -19,23 +18,6 @@ type DeviceConfigRenderingDto struct {
 	FlagOptions   []DeviceConfigOptionRenderingDto
 }
 
-var deviceConfigTemplate *template.Template
-
 func RenderDeviceConfigHtml(data *DeviceConfigRenderingDto) (string, error) {
-	if deviceConfigTemplate == nil {
-		var file = "rest/templates/device_config.html"
-		var err error
-		deviceConfigTemplate, err = template.New("device_config.html").ParseFiles(file)
-
-		if err != nil {
-			return "", err
-		}
-	}
-
-	buf := new(bytes.Buffer)
-	err := deviceConfigTemplate.Execute(buf, data)
-	if err != nil {
-		return "", err
-	}
-	return buf.String(), nil
+	return templates.RenderTemplate("device_config.html", data)
 }
