@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"sensor_hub_backend/config"
+	"sensor_hub_backend/logs"
 	"sensor_hub_backend/mqtt"
 	"sensor_hub_backend/proto_types"
 	"sensor_hub_backend/rest/renderer"
@@ -24,14 +25,14 @@ func getConfigOfDevice(c *gin.Context) {
 
 	optionsJson, err := sql.SelectDeviceConfigJson(deviceId)
 	if err != nil {
-		fmt.Printf("Failed to get device config: %s\n", err)
+		logs.LogErr("Failed to get device config", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
 	options, err := config.DeviceConfigOptionsFromJsonString(optionsJson)
 	if err != nil {
-		fmt.Printf("Failed to unmarshal device config options: %s\n", err)
+		logs.LogErr("Failed to unmarshal device config options", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
@@ -39,7 +40,7 @@ func getConfigOfDevice(c *gin.Context) {
 	renderingDto := createRenderingDto(deviceId, options)
 	htmlString, err := renderer.RenderDeviceConfigHtml(&renderingDto)
 	if err != nil {
-		fmt.Printf("Failed to render device config: %s\n", err)
+		logs.LogErr("Failed to render device config", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
@@ -104,7 +105,7 @@ func postConfigOfDevice(c *gin.Context) {
 
 	var options []saveDeviceConfigDto
 	if err := json.Unmarshal([]byte(formData), &options); err != nil {
-		fmt.Printf("Failed to parse request body: %s\n", err)
+		logs.LogErr("Failed to parse request body", err)
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -113,7 +114,7 @@ func postConfigOfDevice(c *gin.Context) {
 	for i, data := range options {
 		option, err := config.CreateDeviceConfigOption(data.Name, data.Type, data.Value)
 		if err != nil {
-			fmt.Printf("Failed to create device config option: %s\n", err)
+			logs.LogErr("Failed to create device config option", err)
 			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
@@ -123,7 +124,7 @@ func postConfigOfDevice(c *gin.Context) {
 
 	jsonString, err := config.DeviceConfigOptionsToJsonString(deviceConfigOptions)
 	if err != nil {
-		fmt.Printf("Failed to marshal device config options: %s\n", err)
+		logs.LogErr("Failed to marshal device config options", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
@@ -147,14 +148,14 @@ func postPushConfigToDevice(c *gin.Context) {
 
 	optionJson, err := sql.SelectDeviceConfigJson(deviceId)
 	if err != nil {
-		fmt.Printf("Failed to get device config: %s\n", err)
+		logs.LogErr("Failed to get device config", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
 	deviceConfigOptions, err := config.DeviceConfigOptionsFromJsonString(optionJson)
 	if err != nil {
-		fmt.Printf("Failed to unmarshal device config options: %s\n", err)
+		logs.LogErr("Failed to unmarshal device config options", err)
 		c.AbortWithStatus(http.StatusInternalServerError)
 	}
 

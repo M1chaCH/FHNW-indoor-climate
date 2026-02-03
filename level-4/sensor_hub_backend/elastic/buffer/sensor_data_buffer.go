@@ -1,8 +1,8 @@
 package buffer
 
 import (
-	"fmt"
 	"sensor_hub_backend/elastic"
+	"sensor_hub_backend/logs"
 )
 
 const sensorDataBufferSizeLimit = 1000
@@ -18,7 +18,7 @@ func PutSensorDataToBuffer(typedDocs []*elastic.SensorDataDocument) {
 		}
 
 		if len(v) == sensorDataBufferSizeLimit {
-			fmt.Println("Sensor data buffer size limit reached, overwriting data...")
+			logs.LogWarn("Sensor data buffer size limit reached, overwriting data...")
 
 			i := sensorDataBufferOverflow[doc.DeviceId]
 

@@ -1,8 +1,8 @@
 package elastic
 
 import (
-	"fmt"
 	"os"
+	"sensor_hub_backend/logs"
 
 	"github.com/elastic/go-elasticsearch/v9"
 )
@@ -26,5 +26,5 @@ func InitConnection() {
 
 	es = client
 
-	fmt.Println("Connected to ElasticSearch")
+	logs.LogInfo("Connected to ElasticSearch")
 }

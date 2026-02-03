@@ -1,10 +1,10 @@
 package mqtt
 
 import (
-	"fmt"
 	"net/url"
 	"os"
 	"sensor_hub_backend/lifecycle"
+	"sensor_hub_backend/logs"
 
 	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
@@ -51,6 +51,6 @@ func RunMqttClient() {
 	}
 
 	<-stopContext.Done()
-	fmt.Println("Stopping MQTT service...")
+	logs.LogInfo("Stopping MQTT service...")
 	<-connection.Done()
 }

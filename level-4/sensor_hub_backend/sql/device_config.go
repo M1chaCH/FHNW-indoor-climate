@@ -1,6 +1,8 @@
 package sql
 
-import "fmt"
+import (
+	"sensor_hub_backend/logs"
+)
 
 type DeviceConfigEntity struct {
 	DeviceId   string `db:"device_id"`
@@ -25,8 +27,8 @@ func UpsertConfigJson(entity *DeviceConfigEntity) {
 		entity.ConfigJson)
 
 	if err != nil {
-		fmt.Printf("Failed to upsert device config: %s", err)
+		logs.LogErr("Failed to upsert device config", err)
 	} else {
-		fmt.Printf("Successfully upserted device config: %s\n", entity.DeviceId)
+		logs.LogInfo("Successfully upserted device config: %s\n", entity.DeviceId)
 	}
 }

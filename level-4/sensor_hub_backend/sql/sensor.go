@@ -1,8 +1,8 @@
 package sql
 
 import (
-	"fmt"
 	"sensor_hub_backend/lifecycle"
+	"sensor_hub_backend/logs"
 	"sync"
 	"time"
 )
@@ -55,7 +55,7 @@ func ensureUpdateLoopRunning() {
 }
 
 func throttledUpsertLoop() {
-	fmt.Println("Starting throttled upsert loop for sensor devices")
+	logs.LogInfo("Starting throttled upsert loop for sensor devices")
 	ctx := lifecycle.GetStopContext()
 
 	for {
@@ -69,7 +69,7 @@ func throttledUpsertLoop() {
 	}
 
 	ticker.Stop()
-	fmt.Println("Stopped throttled upsert loop for sensor devices")
+	logs.LogInfo("Stopped throttled upsert loop for sensor devices")
 }
 
 func upsertQueuedDevices() {
@@ -90,7 +90,7 @@ func upsertQueuedDevices() {
 
 	tx, err := getDb().Beginx()
 	if err != nil {
-		fmt.Printf("Failed to start transaction: %s\n", err)
+		logs.LogErr("Failed to start transaction", err)
 		return
 	}
 
@@ -107,18 +107,18 @@ func upsertQueuedDevices() {
 		`)
 
 		if err != nil {
-			fmt.Printf("Failed to prepare upsert statement for device %s: %s\n", device.DeviceId, err)
+			logs.LogErrCustom("Failed to prepare upsert statement for device %s: %s\n", device.DeviceId, err)
 			continue
 		}
 
 		var inserted bool
 		if err := statement.Get(&inserted, device); err != nil {
-			fmt.Printf("Failed to upsert device %s: %s\n", device.DeviceId, err)
+			logs.LogErrCustom("Failed to upsert device %s: %s\n", device.DeviceId, err)
 			continue
 		}
 
 		if inserted {
-			deviceChanged <- 1
+			deviceChangedObs.Emit(1)
 		}
 
 		statement.Close()
@@ -126,9 +126,9 @@ func upsertQueuedDevices() {
 
 	err = tx.Commit()
 	if err != nil {
-		fmt.Printf("Failed to commit transaction: %s\n", err)
+		logs.LogErr("Failed to commit transaction", err)
 		// TODO, do I want to add the devices back into the queue?
 	} else {
-		fmt.Printf("successfully upserted %d devices\n", len(devices))
+		logs.LogInfo("successfully upserted %d devices\n", len(devices))
 	}
 }

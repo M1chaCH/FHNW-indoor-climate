@@ -1,8 +1,8 @@
 package mqtt
 
 import (
-	"fmt"
 	"sensor_hub_backend/lifecycle"
+	"sensor_hub_backend/logs"
 	"sensor_hub_backend/proto_types"
 
 	"github.com/eclipse/paho.golang/paho"
@@ -14,7 +14,7 @@ func PushConfigToDevice(data *proto_types.DeviceConfigOptions) {
 
 	encodedPayload, err := proto.Marshal(data)
 	if err != nil {
-		fmt.Printf("Failed to marshal device config: %s\n", err)
+		logs.LogErr("Failed to marshal device config", err)
 		return
 	}
 
@@ -25,8 +25,8 @@ func PushConfigToDevice(data *proto_types.DeviceConfigOptions) {
 	})
 
 	if err != nil {
-		fmt.Printf("Failed to publish device config: %s\n", err)
+		logs.LogErr("Failed to publish device config", err)
 		return
 	}
-	fmt.Printf("Successfully published device config: %s\n", topicUpdateDeviceConfig+"/"+data.DeviceId)
+	logs.LogInfo("Successfully published device config: %s\n", topicUpdateDeviceConfig+"/"+data.DeviceId)
 }

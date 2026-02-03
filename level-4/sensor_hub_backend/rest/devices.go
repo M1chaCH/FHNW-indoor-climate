@@ -1,10 +1,10 @@
 package rest
 
 import (
-	"fmt"
 	"io"
 	"sensor_hub_backend/elastic/buffer"
 	"sensor_hub_backend/lifecycle"
+	"sensor_hub_backend/logs"
 	"sensor_hub_backend/rest/renderer"
 	"sensor_hub_backend/sql"
 
@@ -28,9 +28,9 @@ func getDevicesStream(c *gin.Context) {
 	go func() {
 		err := sql.SubscribeToDevices(deviceChan, c.Request.Context())
 		if err != nil {
-			fmt.Printf("Subscription to devices failed due to an error: %s\n", err)
+			logs.LogErr("Subscription to devices failed due to an error", err)
 		} else {
-			fmt.Println("Subscription to devices closed")
+			logs.LogInfo("Subscription to devices closed")
 		}
 	}()
 
@@ -47,7 +47,7 @@ func getDevicesStream(c *gin.Context) {
 
 			htmlString, err := renderer.RenderDeviceHtml(&renderer.DeviceListDto{Devices: dtos})
 			if err != nil {
-				fmt.Printf("Failed to render device list: %s\n", err)
+				logs.LogErr("Failed to render device list", err)
 				return false
 			}
 

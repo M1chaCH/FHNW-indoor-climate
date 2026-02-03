@@ -3,6 +3,7 @@ package sql
 import (
 	"fmt"
 	"os"
+	"sensor_hub_backend/logs"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -37,7 +38,7 @@ func getDb() *sqlx.DB {
 	openDb.SetConnMaxIdleTime(time.Hour)
 	openDb.SetConnMaxLifetime(8 * time.Hour)
 
-	fmt.Printf("Connected to database: %s:%s %s\n", host, port, dbname)
+	logs.LogInfo("Connected to database: %s:%s %s\n", host, port, dbname)
 	_internalDb = openDb
 	return openDb
 }

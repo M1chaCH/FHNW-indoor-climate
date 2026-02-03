@@ -1,10 +1,11 @@
 package rest
 
 import (
-	"fmt"
 	"io"
 	"sensor_hub_backend/lifecycle"
+	"sensor_hub_backend/logs"
 	"sensor_hub_backend/mqtt/sensor/sensor_data"
+	"sensor_hub_backend/proto_types"
 	"sensor_hub_backend/rest/renderer"
 	"sensor_hub_backend/sql"
 
@@ -22,9 +23,13 @@ func getSensorDataStream(c *gin.Context) {
 	c.Writer.Header().Set("Cache-Control", "no-cache")
 	c.Writer.Header().Set("Connection", "keep-alive")
 
+	sensorDataChannel := make(chan *proto_types.SensorData)
+	i := sensor_data.Observable.Subscribe(sensorDataChannel)
+	defer sensor_data.Observable.Unsubscribe(i)
+
 	c.Stream(func(w io.Writer) bool {
 		select {
-		case data := <-sensor_data.SubscribeToSensorDataChannel():
+		case data := <-sensorDataChannel:
 			measurements := make([]*renderer.SensorMeasurementTemplateDto, len(data.Measurements))
 
 			for i, measurement := range data.GetMeasurements() {
@@ -46,7 +51,7 @@ func getSensorDataStream(c *gin.Context) {
 					buffered = "✅"
 				}
 			} else {
-				fmt.Printf("Failed to check device authorization: %s\n", err)
+				logs.LogErr("Failed to check device authorization", err)
 			}
 
 			dto := &renderer.SensorDataTemplateDto{
@@ -59,7 +64,7 @@ func getSensorDataStream(c *gin.Context) {
 
 			htmlString, err := renderer.RenderSensorDataHtml(dto)
 			if err != nil {
-				fmt.Printf("Failed to render sensor data: %s\n", err)
+				logs.LogErr("Failed to render sensor data", err)
 				return false
 			}
 

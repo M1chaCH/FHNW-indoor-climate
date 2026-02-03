@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"sensor_hub_backend/elastic"
 	"sensor_hub_backend/lifecycle"
+	"sensor_hub_backend/logs"
 	"sensor_hub_backend/mqtt"
 	"sensor_hub_backend/rest"
 	"sync"
@@ -30,8 +30,8 @@ func main() {
 	}()
 
 	<-stopContext.Done()
-	fmt.Println("Shutdown signal received, stopping...")
+	logs.LogInfo("Shutdown signal received, stopping...")
 
 	wg.Wait()
-	fmt.Println("Done!")
+	logs.LogInfo("Done!")
 }

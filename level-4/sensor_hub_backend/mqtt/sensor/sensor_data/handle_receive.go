@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sensor_hub_backend/elastic"
 	"sensor_hub_backend/elastic/buffer"
+	"sensor_hub_backend/logs"
+	"sensor_hub_backend/obs"
 	"sensor_hub_backend/proto_types"
 	"sensor_hub_backend/sql"
 	"time"
@@ -12,21 +14,17 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-var sensorDataChannel = make(chan proto_types.SensorData)
-
-func SubscribeToSensorDataChannel() <-chan proto_types.SensorData {
-	return sensorDataChannel
-}
+var Observable = obs.NewObservable[*proto_types.SensorData]("Sensor Data")
 
 func HandleSensorDataReceived(p *paho.Publish) {
 	sensorData := &proto_types.SensorData{}
 
 	if err := proto.Unmarshal(p.Payload, sensorData); err != nil {
-		fmt.Printf("Failed to unmarshal received sensor data: %s", err)
+		logs.LogErr("Failed to unmarshal received sensor data", err)
 		return
 	}
 
-	fmt.Printf("Received sensor data: %s\n", sensorData)
+	logs.LogInfo("Received sensor data: %s\n", sensorData)
 
 	entity := createDeviceEntity(sensorData)
 	sql.UpsertSensorReadingThrottled(&entity)
@@ -38,13 +36,13 @@ func HandleSensorDataReceived(p *paho.Publish) {
 		elastic.SendSensorDataToElasticDebounced(docs)
 	} else {
 		if err != nil {
-			fmt.Printf("Failed to check device authorization (sending data to buffer): %s\n", err)
+			logs.LogErr("Failed to check device authorization (sending data to buffer)", err)
 		} else {
-			fmt.Println("Device not authorized, sending data to buffer")
+			logs.LogInfo("Device not authorized, sending data to buffer")
 		}
 		buffer.PutSensorDataToBuffer(docs)
 	}
-	sensorDataChannel <- *sensorData
+	Observable.Emit(sensorData)
 }
 
 func createDeviceEntity(sensorData *proto_types.SensorData) sql.DeviceEntity {
@@ -85,7 +83,7 @@ func groupSensorReadings(sensorData *proto_types.SensorData) []*elastic.SensorDa
 		if sensorReading == nil {
 			t, err := parseTimestamp(measurement)
 			if err != nil {
-				fmt.Printf("Failed to parse timestamp: %s, skipping\n", err)
+				logs.LogErrCustom("Failed to parse timestamp: %s, skipping\n", err)
 				continue
 			}
 

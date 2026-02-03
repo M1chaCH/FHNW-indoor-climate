@@ -3,6 +3,7 @@ package sql
 import (
 	"context"
 	"sensor_hub_backend/lifecycle"
+	"sensor_hub_backend/obs"
 	"time"
 )
 
@@ -16,7 +17,7 @@ type DeviceEntity struct {
 }
 
 var authorizedDevicesCache = make(map[string]bool)
-var deviceChanged = make(chan byte)
+var deviceChangedObs = obs.NewObservable[byte]("Device Changed")
 
 func SelectDevices() ([]DeviceEntity, error) {
 	devices := make([]DeviceEntity, 0)
@@ -25,7 +26,7 @@ func SelectDevices() ([]DeviceEntity, error) {
 	return devices, err
 }
 
-func SubscribeToDevices(channel chan []DeviceEntity, stopContext context.Context) error {
+func SubscribeToDevices(channel chan<- []DeviceEntity, stopContext context.Context) error {
 	devices, err := SelectDevices()
 	if err != nil {
 		return err
@@ -34,13 +35,16 @@ func SubscribeToDevices(channel chan []DeviceEntity, stopContext context.Context
 
 	shutdownContext := lifecycle.GetStopContext()
 
+	deviceChangeChannel, i := deviceChangedObs.NewChannel()
+	defer deviceChangedObs.Unsubscribe(i)
+
 	for {
 		select {
 		case <-stopContext.Done():
 			return nil
 		case <-shutdownContext.Done():
 			return nil
-		case <-deviceChanged:
+		case <-deviceChangeChannel:
 			devices, err := SelectDevices()
 			if err != nil {
 				return err
@@ -55,7 +59,7 @@ func ToggleDeviceAuthorization(deviceId string) (bool, error) {
 	_, err := db.Exec("UPDATE devices SET authorized = NOT authorized WHERE device_id = $1", deviceId)
 
 	if err == nil {
-		deviceChanged <- 1
+		deviceChangedObs.Emit(1)
 		v, ok := authorizedDevicesCache[deviceId]
 		if ok {
 			authorizedDevicesCache[deviceId] = !v

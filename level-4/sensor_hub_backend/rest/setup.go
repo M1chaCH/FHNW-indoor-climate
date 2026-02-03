@@ -3,9 +3,9 @@ package rest
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"sensor_hub_backend/lifecycle"
+	"sensor_hub_backend/logs"
 	"sensor_hub_backend/rest/templates"
 	"time"
 
@@ -34,20 +34,20 @@ func RunGinServer() {
 	}
 
 	go func() {
-		fmt.Printf("Starting gin server on %s\n", addr)
+		logs.LogInfo("Starting gin server on %s\n", addr)
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			fmt.Printf("Error starting gin server: %s\n", err)
+			logs.LogErr("Error starting gin server", err)
 		}
 	}()
 
 	<-lifecycle.GetStopContext().Done()
-	fmt.Println("Stopping gin server...")
+	logs.LogInfo("Stopping gin server...")
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(shutdownCtx); err != nil {
-		fmt.Printf("Error shutting down gin server: %s\n", err)
+		logs.LogErr("Error shutting down gin server", err)
 	}
 
-	fmt.Println("Gin server stopped")
+	logs.LogInfo("Gin server stopped")
 }

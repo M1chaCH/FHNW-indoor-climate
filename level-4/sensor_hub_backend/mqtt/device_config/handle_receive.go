@@ -1,8 +1,8 @@
 package device_config
 
 import (
-	"fmt"
 	"sensor_hub_backend/config"
+	"sensor_hub_backend/logs"
 	"sensor_hub_backend/proto_types"
 	"sensor_hub_backend/sql"
 
@@ -14,7 +14,7 @@ func HandleDeviceConfigReceived(p *paho.Publish) {
 	protoDeviceConfig := &proto_types.DeviceConfigOptions{}
 
 	if err := proto.Unmarshal(p.Payload, protoDeviceConfig); err != nil {
-		fmt.Printf("Failed to unmarshal received device config: %s", err)
+		logs.LogErr("Failed to unmarshal received device config", err)
 		return
 	}
 
@@ -23,7 +23,7 @@ func HandleDeviceConfigReceived(p *paho.Publish) {
 	jsonOptions, err := config.DeviceConfigOptionsToJsonString(deviceConfig.Options)
 
 	if err != nil {
-		fmt.Printf("Failed to marshal device config options: %s", err)
+		logs.LogErr("Failed to marshal device config options", err)
 		return
 	}
 

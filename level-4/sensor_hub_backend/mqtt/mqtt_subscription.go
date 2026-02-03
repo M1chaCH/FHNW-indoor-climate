@@ -1,8 +1,8 @@
 package mqtt
 
 import (
-	"fmt"
 	"sensor_hub_backend/lifecycle"
+	"sensor_hub_backend/logs"
 	"sensor_hub_backend/mqtt/device_config"
 	"sensor_hub_backend/mqtt/sensor/sensor_data"
 	"strings"
@@ -39,11 +39,11 @@ func initSubscriptions(cm *autopaho.ConnectionManager) error {
 }
 
 func onClientError(err error) {
-	fmt.Printf("MQTT Client error occurred: %s\n", err)
+	logs.LogErr("MQTT Client error occurred", err)
 }
 
 func onPublishReceived(p paho.PublishReceived) (bool, error) {
-	fmt.Printf("Received MQTT published message: %s %d bytes\n", p.Packet.Topic, len(p.Packet.Payload))
+	logs.LogInfo("Received MQTT published message: %s %d bytes\n", p.Packet.Topic, len(p.Packet.Payload))
 
 	handleReceivedMessageErrors(p.Errs)
 
@@ -52,7 +52,7 @@ func onPublishReceived(p paho.PublishReceived) (bool, error) {
 	} else if strings.HasPrefix(p.Packet.Topic, topicDeviceConfig) {
 		device_config.HandleDeviceConfigReceived(p.Packet)
 	} else {
-		fmt.Printf("No handler found for topic: %s\n", p.Packet.Topic)
+		logs.LogWarn("No handler found for topic: %s\n", p.Packet.Topic)
 	}
 
 	return true, nil
@@ -63,8 +63,8 @@ func handleReceivedMessageErrors(errs []error) {
 		return
 	}
 
-	fmt.Printf("Received MQTT published message with %d errors:\n", len(errs))
+	logs.LogErrCustom("Received MQTT published message with %d errors:\n", len(errs))
 	for _, err := range errs {
-		fmt.Printf("  %s\n", err)
+		logs.LogInfo(err.Error())
 	}
 }

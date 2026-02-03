@@ -3,8 +3,8 @@ package elastic
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"sensor_hub_backend/lifecycle"
+	"sensor_hub_backend/logs"
 	"sync"
 	"time"
 
@@ -59,7 +59,7 @@ func SendSensorDataToElastic(typedDocs []*SensorDataDocument) {
 
 		body, err := createJsonBytes(typedDoc)
 		if err != nil {
-			fmt.Printf("Failed to marshal sensor data document: %s\n", err)
+			logs.LogErr("Failed to marshal sensor data document", err)
 			continue
 		}
 
@@ -70,13 +70,13 @@ func SendSensorDataToElastic(typedDocs []*SensorDataDocument) {
 
 		res, err := req.Do(lifecycle.GetStopContext(), es)
 		if err != nil {
-			fmt.Printf("Failed to send sensor data document to elastic: %s\n", err)
+			logs.LogErr("Failed to send sensor data document to elastic", err)
 			continue
 		}
 
 		err = res.Body.Close()
 		if err != nil {
-			fmt.Printf("Failed to close response body: %s\n", err)
+			logs.LogErr("Failed to close response body", err)
 			continue
 		}
 	}
@@ -94,14 +94,14 @@ func sendInBulk(typedDocs []*SensorDataDocument) {
 	})
 
 	if err != nil {
-		fmt.Printf("Failed to create bulk indexer: %s\n", err)
+		logs.LogErr("Failed to create bulk indexer", err)
 		return
 	}
 
 	for _, typedDoc := range typedDocs {
 		doc, err := createJsonBytes(typedDoc)
 		if err != nil {
-			fmt.Printf("Failed to marshal sensor data document: %s\n", err)
+			logs.LogErr("Failed to marshal sensor data document", err)
 			continue
 		}
 
@@ -111,17 +111,17 @@ func sendInBulk(typedDocs []*SensorDataDocument) {
 		})
 
 		if err != nil {
-			fmt.Printf("Failed to add sensor data document to bulk indexer: %s\n", err)
+			logs.LogErr("Failed to add sensor data document to bulk indexer", err)
 			continue
 		}
 	}
 
 	if err := bi.Close(stopContext); err != nil {
-		fmt.Printf("Failed to close bulk indexer: %s\n", err)
+		logs.LogErr("Failed to close bulk indexer", err)
 	}
 
 	stats := bi.Stats()
-	fmt.Printf("Indexed %d sensor data documents successfully (%d failed)\n", stats.NumFlushed, stats.NumFailed)
+	logs.LogInfo("Indexed %d sensor data documents successfully (%d failed)\n", stats.NumFlushed, stats.NumFailed)
 }
 
 func createJsonBytes(typedDoc *SensorDataDocument) ([]byte, error) {
@@ -150,20 +150,22 @@ func ensureUpdateLoopRunning() {
 }
 
 func periodicSendSensorDataToElastic() {
-	fmt.Println("Starting periodic send sensor data to elastic loop")
+	logs.LogInfo("ElasticSensorDataPublisher: Starting loop.")
 	ctx := lifecycle.GetStopContext()
 
 	for {
 		select {
 		case <-ticker.C:
 			if sensorDataToSend == nil {
-				break
+				logs.LogInfo("ElasticSensorDataPublisher: sensorDataToSend nil -> skipping")
+				continue
 			}
 
 			sensorDataToSend.mu.Lock()
 			if len(sensorDataToSend.docs) == 0 {
 				sensorDataToSend.mu.Unlock()
-				break
+				logs.LogInfo("ElasticSensorDataPublisher: no changes -> skipping")
+				continue
 			}
 
 			docsToSend := make([]*SensorDataDocument, len(sensorDataToSend.docs))
@@ -175,7 +177,10 @@ func periodicSendSensorDataToElastic() {
 
 			continue
 		case <-ctx.Done():
+			logs.LogInfo("ElasticSensorDataPublisher: Stopping loop.")
 		}
 		break
 	}
+
+	logs.LogInfo("ElasticSensorDataPublisher: Stopped.")
 }
