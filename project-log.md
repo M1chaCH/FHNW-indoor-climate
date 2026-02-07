@@ -190,9 +190,9 @@ HiveMQ has a WebUI that allows for a lot easier debugging and analysis. In HiveM
 But HiveMQ is a lot heavier than Mosquitto. Mosquitto could even be run on a raspberry PI.
 HiveMQ could be scaled vertically, but I think I do not need this anyways.
 
-So now the question arises, why so I need an MQTT broker? What benefits do I gain by this? Its basically just a message bus... Well, its not just a message bus. It allows the micro controller to send data in a very lightweight format. Also, this is important, MQTT allows for easy bi-directional communication. With this in mind, I should certainly use an MQTT broker. But which one.
+So now the question arises, why do I need an MQTT broker? What benefits do I gain by this? Its basically just a message bus... Well, its not just a message bus. It allows the micro controller to send data in a very lightweight format. Also, this is important, MQTT allows for easy bi-directional communication. With this in mind, I should certainly use an MQTT broker. But which one.
 
-I'll decide for Mosquitto as my MQTT broker. Because it is lightweight and I do not think that I need the heavy features from HiveMQ and I can run Mosquitto on my raspberry pi.
+I'll decide for Mosquitto as my MQTT broker. Because it is lightweight and I do not think that I need the heavy features from HiveMQ and I can run Mosquitto on my raspberry pi. Also for debugging messages through Mosquitto I can easily use Postman.
 
 
 #### WiFi vs Bluetooth
@@ -200,7 +200,7 @@ The ESP32 needs to send data to an MQTT broker. And the ESP32 needs to be able t
 If I were to decide for WiFi, this would be simple. The ESP can just connect to an MQTT broker and let the broker handle the communication.
 If I were to decide for BLE, this would be a lot more complex. Because the MQTT broker is only available over TCP. This means the I would have to setup & program a layer that copies the bi-directional communication from MQTT to a Bluetooth device. It seems very hard to implement this reliably. 
 
-So I'll decide for WiFi, but if there is time remaining, I'll figure out how my app would work if data was sent over bluetooth.
+So I'll decide for WiFi, but if there is time remaining, I'll figure out how my app would work if data was sent over Bluetooth.
 
 
 #### Battery vs wired power
@@ -222,3 +222,33 @@ The solution was then to simply convert `wifi.radio.ipv4_address` into a string.
 I have quite some frontend experience with many tools like Angular, React, Svelte and so on. But I have never used HTMX before. So in this project I want to use HTMX. Apparently it works very well in combination with go gin. 
 Is it better for my project than other frameworks? Well, I don't think so. The deployment should be 0 effort. Also it is cool to learn something new. But I think a common web framework could do the job just as good if not even a bit better. In HTMX the goal is to no write a single line of JavaScript. While this is nice, this also reduces your flexibilities. So lets see if I can implement my ideas without any JavaScript. 
 To get to know HTMX, I have also consulted LLMs.
+
+
+### Issues
+I did encounter some problems during the development process. 
+- I struggled with python typing or the absence of a type system in python. Especially when working with the minipb library. They do proper type checking.
+- Paths are always annoying. I had issues with the lookup of the HTML files from the file system. But luckily GO has a proper solution for this, but I did not know it before hand. You can mark files as embedded in the binary using a comment and then access these files directly.
+- I am using Server Sent Events to keep the frontend live updated. My reverse proxy configuration could not handle this beforehand. So I had to increase the request timeout and add some more proxy headers to ensure proper request routing.
+- I have not written many "large" go applications. But whenever I try to do so, i struggle with keeping my project organized. I always end up with so many files and seemingly random functions living in random files. Combined with bad package structure or naming, it becomes a challenge to keep the overview over the project. I have no not yet figured out how to solve this.
+- go channels: it turns out, I have forgotten how channels work... I thought this was a non blocking construct of a emitters and listeners. But it actually is not. By listening ont the value of a channel, you block your routine until a value appears. So far so good. **But** when pushing a value into a channel, you don't just fire and forget, but you block until the first "listener" responds and receives the value. I forgot about this behavior. so some of my logic in the backend did not work at all. So i fixed it by implementing an "Observable" struct, which kind of implements this fire and forget logic.
+
+### Open Points
+The current solution could be implemented a lot more reliably. Currently you have no access to the logs of the micro controllers. If the controller doesn't send any data to the MQTT Broker, than the only option for debugging is to plug it into a serial reader. Maybe I could have used the LED lights on the board to signal some sort of error code or I could send logs and metrics over mqtt.
+
+Also there are potential timing issues. The frontend config editor does not update automatically if the broker sends a config update. So you might apply changes based on an old version. Generally the config setting system is rather fragile. As soon as the micro controller restarts, all changes are lost and the default values are written to the backend DB. So with more time, I could have implemented a more secure handshake between any backend and a micro controller. And I could have tried to persist changes on the micro controller.
+
+Generally metrics and logs is an open point. The ELK stack is optimal for managing logs and metrics. So the backend, micro controller and mqtt broker could send its logs and metrics to elastic and kibana would visualize this nicely.
+
+### Fazit
+Looking back on the project, I think it turned out good and it was fun to work on it. I finally got a small introduction into micro controllers and a bit of hardware. 
+
+**Decisions evaluation**
+Backend Programming language: I thing choosing go as the programming language was the right decision. It forces you to think better about what you are doing, because the language it self does not have a bunch of heavy features like C# and because of the error handling system. Many people think the error handling system in go is annoying. While this is true to some extend, it also forces you to think about error handling. I like this.
+Also I was very surprised about the `html/templates` package built into go. It has an extremely powerfull templating language. This helped a lot when working with HTMX.
+
+HTMX: It was nice to get to know a framework like this. Would I use it again? Yes, but only for very specific applications. If the frontend needs to be highly dynamic and there is a lot of user interaction, I would absolutely not use it. But for a heavy read page that benefits from being rendered on to server I'd definitely use it again. Its just very important to have a proper templating system ready in the backend. I did not see this coming and if go would not have this `html/templates` package, I would have seriously struggled with keeping the implementation clean.
+
+Mosquitto: This was definitely the better solution then HiveMQ. It runs well on my raspberry pi and I do not need anything more.
+
+ProtoBuf: I am sure that this was the better solution than working with JSON. Firstly from a performance and efficiency point of view. But also for me, I learned something new and I'll certainly use this in a future project again.
+The downside of ProtoBuf is that its hard to debug. With JSON and HTTP you can just send a request to an endpoint using postman and see what happens. With protobuf, this becomes a bit of a challenge, because Postman can't just display the body of the message.
